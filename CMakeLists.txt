@@ -20,6 +20,20 @@ option(BUILD_MAKE_UP "build MakeUp, desktop GUI wizard - requires Qt5")
 # define a user-configurable option to build doxstyle
 option(BUILD_DOX_STYLE "build doxstyle, documentation block streamliner")
 
+# optionally require HDF5
+option(ENABLE_HDF5 "Enable HDF5 support" ON)
+if(ENABLE_HDF5)
+    include_directories(../../HighFive)
+    find_package(HDF5)
+    if(HDF5_FOUND)
+        include_directories(${HDF5_INCLUDE_DIR})
+        set(_hdf5_libs hdf5 hdf5_cpp)
+        message("Enabling HDF5 HighFive library support")
+        find_package(HighFive 2.0 REQUIRED)
+        include_directories($<TARGET_PROPERTY:HighFive,INTERFACE_INCLUDE_DIRECTORIES>)
+        link_libraries($<TARGET_PROPERTY:HighFive,INTERFACE_LINK_LIBRARIES>)
+    endif()
+endif()
 # add all relevant subdirectories; each subdirectory defines a single target
 add_subdirectory(SMILE)
 if (BUILD_SKIRT)

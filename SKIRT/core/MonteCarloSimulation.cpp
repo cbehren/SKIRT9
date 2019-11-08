@@ -19,6 +19,10 @@
 #include "StringUtils.hpp"
 #include "TimeLogger.hpp"
 
+#include "HDF5InFile.hpp"
+
+#include <iostream>
+
 ////////////////////////////////////////////////////////////////////
 
 void MonteCarloSimulation::setupSimulation()
@@ -30,6 +34,7 @@ void MonteCarloSimulation::setupSimulation()
         SimulationItem::setup();
         wait("setup");
     }
+    HDF5InFile(this,"test.hdf5","");
 
     // write setup output
     {
