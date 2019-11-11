@@ -33,5 +33,5 @@ $CMAKEPATH -E chdir ../release $CMAKEPATH -DCMAKE_BUILD_TYPE:STRING=Release -L .
 echo
 
 # Perform the build
-make -j ${1:-1} -C ../release
+make -j ${1:-1} -C ../debug
 echo

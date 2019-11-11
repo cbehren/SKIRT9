@@ -4,7 +4,7 @@
 ///////////////////////////////////////////////////////////////// */
 
 #include "Snapshot.hpp"
-#include "TextInFile.hpp"
+#include "HDF5InFile.hpp"
 #include "Log.hpp"
 #include "Random.hpp"
 #include "Units.hpp"
@@ -26,7 +26,7 @@ Snapshot::~Snapshot()
 
 void Snapshot::open(const SimulationItem* item, string filename, string description)
 {
-    _infile = new TextInFile(item, filename, description);
+    _infile = new HDF5InFile(item, filename, description);
     setContext(item);
 }
 

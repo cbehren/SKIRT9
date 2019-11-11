@@ -10,7 +10,7 @@
 #include "SmoothedParticleGrid.hpp"
 #include "SmoothingKernel.hpp"
 #include "StringUtils.hpp"
-#include "TextInFile.hpp"
+#include "HDF5InFile.hpp"
 #include "Units.hpp"
 
 ////////////////////////////////////////////////////////////////////

@@ -36,6 +36,8 @@ done
 # Generate the build files
 $CMAKEPATH -E make_directory ../release
 $CMAKEPATH -E chdir ../release $CMAKEPATH $USEROPTIONS -DCMAKE_BUILD_TYPE:STRING=Release -L ../git
+$CMAKEPATH -E make_directory ../debug
+$CMAKEPATH -E chdir ../debug $CMAKEPATH $USEROPTIONS -DCMAKE_BUILD_TYPE:STRING=Debug -L ../git
 
 # Provide instructions to the user
 echo

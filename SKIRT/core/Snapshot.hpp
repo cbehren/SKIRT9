@@ -13,7 +13,7 @@
 class Log;
 class Random;
 class SimulationItem;
-class TextInFile;
+class HDF5InFile;
 class Units;
 
 ////////////////////////////////////////////////////////////////////
@@ -85,7 +85,7 @@ protected:
 
     /** This function returns a pointer to the input file object. It is intended for use in
         subclasses. */
-    TextInFile* infile() { return _infile; }
+    HDF5InFile* infile() { return _infile; }
 
     /** This function returns a pointer to an appropriate log object. It is intended for use in
         subclasses. */
@@ -350,7 +350,7 @@ public:
 
 private:
     // data members initialized during configuration
-    TextInFile* _infile{nullptr};
+    HDF5InFile* _infile{nullptr};
     Log* _log{nullptr};
     Units* _units{nullptr};
     Random* _random{nullptr};

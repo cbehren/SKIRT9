@@ -10,7 +10,7 @@
 #include "Random.hpp"
 #include "SpatialGridPath.hpp"
 #include "StringUtils.hpp"
-#include "TextInFile.hpp"
+#include "HDF5InFile.hpp"
 #include "Units.hpp"
 
 ////////////////////////////////////////////////////////////////////
@@ -28,7 +28,7 @@ namespace AdaptiveMesh_Private
            following line in the specified input file. It then recursively constructs any child
            nodes. In addition to constructing the new node(s), the constructor also adds leaf node
            pointers to the vector held by the AdaptiveMeshSnapshot class. */
-        Node(const Box& extent, TextInFile* infile, vector<Node*>& leafnodes) : Box(extent)
+        Node(const Box& extent, HDF5InFile* infile, vector<Node*>& leafnodes) : Box(extent)
         {
             // if this is a nonleaf line, process it
             if (infile->readNonLeaf(_Nx, _Ny, _Nz))

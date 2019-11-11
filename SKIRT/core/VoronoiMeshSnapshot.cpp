@@ -16,7 +16,7 @@
 #include "SpatialGridPlotFile.hpp"
 #include "StringUtils.hpp"
 #include "Table.hpp"
-#include "TextInFile.hpp"
+#include "HDF5InFile.hpp"
 #include "Units.hpp"
 #include "voro_compute.hh"
 
@@ -411,7 +411,7 @@ VoronoiMeshSnapshot::VoronoiMeshSnapshot(const SimulationItem* item, const Box& 
                                          string filename, bool relax)
 {
     // read the input file
-    TextInFile in(item, filename, "Voronoi sites");
+    HDF5InFile in(item, filename, "Voronoi sites");
     in.addColumn("position x", "length", "pc");
     in.addColumn("position y", "length", "pc");
     in.addColumn("position z", "length", "pc");

@@ -62,7 +62,6 @@ HDF5InFile::HDF5InFile(const SimulationItem* item, string filename, string descr
 {
     // open the file
     string filepath = item->find<FilePaths>()->input(filename);
-    filepath = "newtest.hdf5";
     _in = new HF::File(filepath,HF::File::ReadOnly);
 
     // figure out the columns that we have
@@ -76,8 +75,10 @@ HDF5InFile::HDF5InFile(const SimulationItem* item, string filename, string descr
             std::cout << name << " is a dataset"  << std::endl;
             HF::DataSet ds = _in->getDataSet(name);
             HF::Attribute att = ds.getAttribute("unit");
+            std::cout << "opened attribute " << std::endl;
             std::string unit;
             att.read(unit);
+            std::cout << "its unit is " << unit << std::endl;
             att = ds.getAttribute("description");
             std::string description;
             att.read(description);
@@ -269,8 +270,9 @@ void HDF5InFile::addColumn(string description, string quantity, string defaultUn
 
 //////////////////////////////////////////////////////////////////////
 //
-//bool HDF5InFile::readRow(Array& values)
-//{
+bool HDF5InFile::readRow(Array& values)
+{
+    throw FATALERROR("readRow not implemented");
 //    if (!_hasProgInfo) throw FATALERROR("No columns were declared for column text file");
 //
 //    // read new line until it is non-empty and non-comment
@@ -309,12 +311,13 @@ void HDF5InFile::addColumn(string description, string quantity, string defaultUn
 //
 //    // end of file was reached
 //    return false;
-//}
+}
 //
 //////////////////////////////////////////////////////////////////////
 //
-//bool HDF5InFile::readNonLeaf(int& nx, int& ny, int& nz)
-//{
+bool HDF5InFile::readNonLeaf(int& nx, int& ny, int& nz)
+{
+    throw FATALERROR("readNonLeaf not implemented");
 //    string line;
 //
 //    while (true)
@@ -354,12 +357,13 @@ void HDF5InFile::addColumn(string description, string quantity, string defaultUn
 //            return false;
 //        }
 //    }
-//}
+}
 //
 //////////////////////////////////////////////////////////////////////
 //
-//vector<Array> HDF5InFile::readAllRows()
-//{
+vector<Array> HDF5InFile::readAllRows()
+{
+    throw FATALERROR("readNonLeaf not implemented");
 //    vector<Array> rows;
 //    while (true)
 //    {
@@ -371,12 +375,13 @@ void HDF5InFile::addColumn(string description, string quantity, string defaultUn
 //        }
 //    }
 //    return rows;
-//}
+}
 //
 //////////////////////////////////////////////////////////////////////
 //
-//vector<Array> HDF5InFile::readAllColumns()
-//{
+vector<Array> HDF5InFile::readAllColumns()
+{
+    throw FATALERROR("readNonLeaf not implemented");
 //    // read the remainder of the file into rows
 //    const vector<Array>& rows = readAllRows();
 //    size_t nrows = rows.size();
@@ -389,6 +394,6 @@ void HDF5InFile::addColumn(string description, string quantity, string defaultUn
 //            columns[c][r] = rows[r][c];
 //
 //    return columns;
-//}
+}
 //
 //////////////////////////////////////////////////////////////////////
