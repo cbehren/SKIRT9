@@ -34,7 +34,7 @@ void MonteCarloSimulation::setupSimulation()
         SimulationItem::setup();
         wait("setup");
     }
-    HDF5InFile(this,"test.hdf5","");
+    HDF5InFile(this,"newtest.hdf5","");
 
     // write setup output
     {
