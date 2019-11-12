@@ -27,11 +27,10 @@ HDF5InFile::HDF5InFile(const SimulationItem* item, string filename, string descr
     // figure out the columns that we have
     std::vector<std::string> object_names = _in->listObjectNames();
     size_t index=0;
-    for(int i=0;i<object_names.size();i++)
+    for(string &name: object_names)
     {
-        if(_in->getObjectType(object_names[i])==HF::ObjectType::Dataset)
+        if(_in->getObjectType(name)==HF::ObjectType::Dataset)
         {
-            std::string name = object_names[i];
             std::cout << name << " is a dataset"  << std::endl;
             HF::DataSet ds = _in->getDataSet(name);
             HF::Attribute att = ds.getAttribute("unit");
