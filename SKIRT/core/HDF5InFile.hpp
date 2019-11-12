@@ -13,6 +13,7 @@
 #include <highfive/H5DataSet.hpp>
 #include <highfive/H5DataSpace.hpp>
 #include <highfive/H5File.hpp>
+#include <highfive/H5Easy.hpp>
 
 namespace HF = HighFive;
 
@@ -196,6 +197,11 @@ private:
     /** This function returns the index of the first column that is described as "wavelength", or
         the error value if there is no such column. */
     size_t waveIndexForSpecificQuantity() const;
+    
+    /** Read the data, cache it into vectors (floats only). Return if data has been read.
+     */ 
+    void readData();
+     
 
     //======================== Private helpers for reading ========================
 
@@ -224,6 +230,8 @@ private:
     HF::File*  _in{nullptr};      // the input stream
     Units* _units{nullptr}; // the units system
     Log* _log{nullptr};     // the logger
+    size_t _currentRowIndex{0};  // the current row index (zero-based)
+    size_t _numRows{0};      // the total number of rows available
 
     // private type to store column info
     class ColumnInfo
@@ -246,6 +254,8 @@ private:
     size_t _numLogCols{0};      // number of logical columns, or number of program columns added so far
 
     vector<size_t> _logColIndices; // zero-based index into _colv for each physical column to be read
+    
+    vector<vector<double> > _data;       // content of the hdf5 file
 };
 
 ////////////////////////////////////////////////////////////////////

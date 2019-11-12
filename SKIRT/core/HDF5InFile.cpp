@@ -14,47 +14,7 @@
 #include <regex>
 #include <sstream>
 
-////////////////////////////////////////////////////////////////////
 
-namespace
-{
-    // This function looks for the next header line that conforms to the required structured syntax. If such a line
-    // is found, the column index, description and unit string are stored in the arguments and true is returned.
-    // If no such header line is found, the function consumes the complete header and returns false.
-    bool getNextInfoLine(std::ifstream& in, size_t& colIndex, string& description, string& unit)
-    {
-        // continue reading until a conforming header line is found or until the complete header has been consumed
-        while (true)
-        {
-            // consume whitespace characters but nothing else
-            while (true)
-            {
-                auto ch = in.peek();
-                if (ch != ' ' && ch != '\t' && ch != '\n' && ch != '\r') break;
-                in.get();
-            }
-
-            // if the first non-whitespace character is not a hash character, there is no header line
-            if (in.peek() != '#') return false;
-
-            // read the header line
-            string line;
-            getline(in, line);
-
-            // if the line conforms to the required syntax, return the extracted information
-            static const std::regex syntax("#\\s*column\\s*(\\d+)\\s*:\\s*([^()]*)\\(\\s*([a-zA-Z0-9/]*)\\s*\\)\\s*",
-                                           std::regex::icase);
-            std::smatch matches;
-            if (std::regex_match(line, matches, syntax) && matches.size()==4)
-            {
-                colIndex = std::stoul(matches[1].str());
-                description = StringUtils::squeeze(matches[2].str());
-                unit = matches[3].str();
-                return true;
-            }
-        }
-    }
-}
 
 ////////////////////////////////////////////////////////////////////
 
@@ -75,16 +35,10 @@ HDF5InFile::HDF5InFile(const SimulationItem* item, string filename, string descr
             std::cout << name << " is a dataset"  << std::endl;
             HF::DataSet ds = _in->getDataSet(name);
             HF::Attribute att = ds.getAttribute("unit");
-            std::cout << "opened attribute " << std::endl;
             std::string unit;
             att.read(unit);
-            std::cout << "its unit is " << unit << std::endl;
-            att = ds.getAttribute("description");
-            std::string description;
-            att.read(description);
             _colv.emplace_back();
-            _colv.back().physColIndex = index;
-            index++;
+            _colv.back().physColIndex = ++index;
             _colv.back().unit = unit;	
             _colv.back().title = name;
         }
@@ -214,9 +168,12 @@ void HDF5InFile::useColumns(string columns)
 void HDF5InFile::addColumn(string description, string quantity, string defaultUnit)
 {
     _hasProgInfo = true;
+    
+    size_t index = indexForName(description);
 
     // get a writable reference to the column record being handled, and increment the program column index
-    ColumnInfo& col = _colv[_numLogCols++];
+    ColumnInfo& col = _colv[index];
+    _numLogCols++;
 
     // store the programmatically provided information in the record (unit is already stored)
     col.description = description;
@@ -245,10 +202,11 @@ void HDF5InFile::addColumn(string description, string quantity, string defaultUn
     else
     {
         if (!_units->has(col.quantity, col.unit))
+        {
             throw FATALERROR("Invalid units for quantity in column " + std::to_string(_numLogCols));
+        }
         col.convFactor = _units->in(col.quantity, col.unit, 1.);
     }
-
     // add the physical to logical column mapping for this column
     if (_logColIndices.size() < col.physColIndex) _logColIndices.resize(col.physColIndex, ERROR_NO_INDEX);
     if (_logColIndices[col.physColIndex-1] != ERROR_NO_INDEX)
@@ -272,45 +230,30 @@ void HDF5InFile::addColumn(string description, string quantity, string defaultUn
 //
 bool HDF5InFile::readRow(Array& values)
 {
-    throw FATALERROR("readRow not implemented");
-//    if (!_hasProgInfo) throw FATALERROR("No columns were declared for column text file");
-//
-//    // read new line until it is non-empty and non-comment
-//    string line;
-//    while (_in.good())
-//    {
-//        getline(_in,line);
-//        auto pos = line.find_first_not_of(" \t");
-//        if (pos!=string::npos && line[pos]!='#')
-//        {
-//            // resize result array if needed (we don't need it to be cleared)
-//            if (values.size() != _numLogCols) values.resize(_numLogCols);
-//
-//            // convert values from line and store them in result array
-//            std::stringstream linestream(line);
-//            for (size_t i : _logColIndices)         // i: zero-based logical index
-//            {
-//                if (linestream.eof()) throw FATALERROR("One or more required value(s) on text line are missing");
-//
-//                // read the value as floating point
-//                double value;
-//                linestream >> value;
-//                if (linestream.fail()) throw FATALERROR("Input text is not formatted as a floating point number");
-//
-//                // if mapped to a logical column, convert from input units to internal units, and store the result
-//                if (i != ERROR_NO_INDEX)
-//                {
-//                    const ColumnInfo& col = _colv[i];
-//                    values[i] = value * (col.waveExponent ? pow(values[col.waveIndex],col.waveExponent)
-//                                                          : col.convFactor);
-//                }
-//            }
-//            return true;
-//        }
-//    }
-//
-//    // end of file was reached
-//    return false;
+   readData();
+   if (!_hasProgInfo) throw FATALERROR("No columns were declared for column text file");
+    
+   if(_numRows == _currentRowIndex)
+       return false;
+   // read new line until it is non-empty and non-comment
+       
+   // resize result array if needed (we don't need it to be cleared)
+   if (values.size() != _numLogCols) values.resize(_numLogCols);
+    for (size_t i : _logColIndices)         // i: zero-based logical index
+        {
+            // read the value as floating point
+            double value = _data[i][_currentRowIndex];
+            
+            // if mapped to a logical column, convert from input units to internal units, and store the result
+            if (i != ERROR_NO_INDEX)
+            {
+                const ColumnInfo& col = _colv[i];
+                values[i] = value * (col.waveExponent ? pow(values[col.waveIndex],col.waveExponent)
+                                                        : col.convFactor);
+            }
+        }
+    _currentRowIndex++;
+    return true;
 }
 //
 //////////////////////////////////////////////////////////////////////
@@ -363,37 +306,65 @@ bool HDF5InFile::readNonLeaf(int& nx, int& ny, int& nz)
 //
 vector<Array> HDF5InFile::readAllRows()
 {
-    throw FATALERROR("readNonLeaf not implemented");
-//    vector<Array> rows;
-//    while (true)
-//    {
-//        rows.emplace_back();        // add a default-constructed array to the vector
-//        if (!readRow(rows.back()))  // read next line's values into that array
-//        {
-//            rows.pop_back();        // at the end, remove the extraneous array
-//            break;
-//        }
-//    }
-//    return rows;
+   vector<Array> rows;
+   while (true)
+   {
+       rows.emplace_back();        // add a default-constructed array to the vector
+       if (!readRow(rows.back()))  // read next line's values into that array
+       {
+           rows.pop_back();        // at the end, remove the extraneous array
+           break;
+       }
+   }
+   return rows;
 }
 //
 //////////////////////////////////////////////////////////////////////
 //
 vector<Array> HDF5InFile::readAllColumns()
 {
-    throw FATALERROR("readNonLeaf not implemented");
-//    // read the remainder of the file into rows
-//    const vector<Array>& rows = readAllRows();
-//    size_t nrows = rows.size();
-//    size_t ncols = _colv.size();
-//
-//    // transpose the result into columns
-//    vector<Array> columns(ncols, Array(nrows));
-//    for (size_t c=0; c!=ncols; ++c)
-//        for (size_t r=0; r!=nrows; ++r)
-//            columns[c][r] = rows[r][c];
-//
-//    return columns;
+    
+   // read the remainder of the file into rows
+   const vector<Array>& rows = readAllRows();
+   size_t nrows = rows.size();
+   size_t ncols = _colv.size();
+
+   // transpose the result into columns
+   vector<Array> columns(ncols, Array(nrows));
+   for (size_t c=0; c!=ncols; ++c)
+       for (size_t r=0; r!=nrows; ++r)
+           columns[c][r] = rows[r][c];
+
+   return columns;
 }
 //
 //////////////////////////////////////////////////////////////////////
+
+
+void HDF5InFile::readData()
+{
+    if(!_data.empty())
+        return;
+    else
+    {
+        size_t expectedNumRows = 0;
+        _data.resize(_colv.size());
+        for (const ColumnInfo& col :_colv)
+        {
+            size_t myIndex = _logColIndices[col.physColIndex-1];
+            _data[myIndex] = H5Easy::load<std::vector<double> >(*_in,col.title);
+            size_t myNumRows = _data[myIndex].size();
+            if(expectedNumRows==0)
+                expectedNumRows = myNumRows;
+            else
+            {
+                if(expectedNumRows != myNumRows)
+                {
+                    throw FATALERROR("The number of rows in each HDF5 dataset needs to be the same!");
+                }
+            }
+        }
+        _numRows = expectedNumRows;
+    }
+    
+}
